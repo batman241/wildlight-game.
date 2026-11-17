@@ -1,0 +1,247 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>Wildlight — Ashenfell 3D Integration Alpha</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111b1d;color:#f4efe4;font:13px system-ui,sans-serif;touch-action:none}canvas{display:block}button,select{font:inherit;color:inherit}button{cursor:pointer}#top{position:fixed;top:env(safe-area-inset-top);left:10px;right:10px;pointer-events:none;text-shadow:0 2px 8px #000}#top strong{font-size:15px;letter-spacing:.13em}#status{font-size:11px;color:#e1d9cb}#quest{margin-top:7px;max-width:340px;padding:8px 10px;border-radius:9px;background:#101a1cc9;font-size:11px}#quest b{display:block;color:#f0d3a4;font-size:12px}#topButtons{position:fixed;right:10px;top:calc(12px + env(safe-area-inset-top));display:flex;gap:5px;pointer-events:auto}#topButtons button{background:#243538e8;border:1px solid #a0b1a4;border-radius:7px;padding:7px 9px;font-size:11px}#joy{position:fixed;left:14px;bottom:calc(16px + env(safe-area-inset-bottom));width:112px;height:112px;border:2px solid #b8c9b988;border-radius:50%;background:#253d3a77;touch-action:none}#nub{position:absolute;width:48px;height:48px;left:30px;top:30px;background:#c6d1c6ba;border-radius:50%}#controls{position:fixed;right:10px;bottom:calc(13px + env(safe-area-inset-bottom));display:flex;gap:5px;align-items:flex-end}#controls button{height:54px;min-width:53px;border:1px solid #a9bdad;border-radius:30px;background:#2b4945dd;color:white;font-weight:750;font-size:10px;padding:5px}#controls #run{height:62px;background:#45624bdc}#controls #attack{background:#71473edc}#prompt{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);background:#182627db;border-radius:8px;padding:7px 10px;text-align:center;pointer-events:none;font-size:11px;max-width:65vw}#active{position:fixed;right:10px;bottom:calc(81px + env(safe-area-inset-bottom));background:#29333fe8;border:1px solid #aab6bc;border-radius:9px;padding:7px;font-size:11px}#modal{position:fixed;inset:0;background:#070b0cbd;display:none;align-items:center;justify-content:center;z-index:5;padding:12px;touch-action:pan-y}#modal.open{display:flex}#panel{width:min(520px,96vw);max-height:92dvh;overflow:auto;background:linear-gradient(140deg,#273c3d,#151c29);border:1px solid #a9b4aa;border-radius:16px;padding:19px;box-shadow:0 15px 60px #000b}#panel h2{margin:0 0 12px;font-size:23px;color:#f4d9b4}#panel p{line-height:1.55}#panel button,#panel select{border:1px solid #9eaca8;background:#304549;border-radius:8px;padding:9px 12px;margin:5px 5px 5px 0}#panel select{width:100%}#panel .powerrow{border-bottom:1px solid #ffffff25;padding:7px 0}#panel small{color:#cbd3cd}#retry{display:none}#notice{position:fixed;top:25%;left:50%;transform:translateX(-50%);background:#14252de8;border:1px solid #b5c2ad;padding:10px;border-radius:9px;display:none;max-width:80vw;text-align:center;z-index:3}@media(max-height:480px){#topButtons{top:5px}#quest{max-width:45vw}#joy{width:90px;height:90px}#nub{width:40px;height:40px;left:23px;top:23px}#controls button{height:45px;min-width:48px}#controls #run{height:49px}#active{bottom:68px}#prompt{bottom:98px}}
+</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script><style id="v6-movement-controls">
+#joy{left:22px;bottom:calc(24px + env(safe-area-inset-bottom));width:132px;height:132px;border:2px solid #b8c9b988;border-radius:50%;background:#253d3a77;touch-action:none;z-index:3}
+#nub{position:absolute;width:58px;height:58px;left:35px;top:35px;background:#c6d1c6ba;border-radius:50%;pointer-events:none}
+#run{position:fixed;right:24px;bottom:calc(43px + env(safe-area-inset-bottom));width:95px;height:95px;min-width:95px;border:1px solid #a9bdad;border-radius:50%;background:#2b4945c9;color:white;font-weight:bold;touch-action:none;z-index:3}
+#controls{right:13px;bottom:calc(155px + env(safe-area-inset-bottom));display:flex;gap:7px;align-items:center;z-index:3}
+#controls button{width:65px;min-width:65px;height:55px;border-radius:12px;font-size:11px}
+#active{bottom:calc(221px + env(safe-area-inset-bottom))}
+@media(max-height:480px){#joy{width:132px;height:132px;left:22px;bottom:calc(15px + env(safe-area-inset-bottom))}#nub{width:58px;height:58px;left:35px;top:35px}#run{width:95px;height:95px;right:20px;bottom:calc(18px + env(safe-area-inset-bottom))}#controls{bottom:calc(117px + env(safe-area-inset-bottom))}#controls button{height:44px;width:59px;min-width:59px}#active{bottom:calc(170px + env(safe-area-inset-bottom))}}
+</style><style id="map-and-spacing">
+#minimap{position:fixed;right:12px;top:calc(53px + env(safe-area-inset-top));width:138px;padding:6px;background:#10201fdd;border:1px solid #a6b6a080;border-radius:11px;z-index:2;pointer-events:none;box-shadow:0 3px 16px #0007}
+#maptitle{font-size:10px;font-weight:800;letter-spacing:.08em;display:flex;justify-content:space-between;color:#e9dfc9;margin-bottom:4px}
+#mapcanvas{width:124px;height:124px;display:block;border-radius:6px;background:#24392f}
+#maplegend{font-size:9px;color:#d2d7c7;text-align:center;margin-top:4px}
+/* RUN is deliberately isolated at the far right, away from the joystick and other action buttons. */
+#run{right:calc(8px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));width:91px;height:91px;min-width:91px;z-index:4}
+#controls{right:calc(116px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));gap:6px;z-index:3}
+#controls button{width:57px;min-width:57px;height:53px}
+#active{right:calc(116px + env(safe-area-inset-right));bottom:calc(89px + env(safe-area-inset-bottom))}
+@media(max-height:480px){#minimap{top:36px;width:116px;padding:5px}#mapcanvas{width:104px;height:104px}#maptitle{font-size:9px}#maplegend{font-size:8px}#run{right:calc(8px + env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));width:83px;height:83px;min-width:83px}#controls{right:calc(106px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));gap:4px}#controls button{width:51px;min-width:51px;height:44px}#active{right:calc(106px + env(safe-area-inset-right));bottom:calc(74px + env(safe-area-inset-bottom))}}
+@media(max-width:700px){#controls button{width:43px;min-width:43px;font-size:9px}#controls{gap:3px}#run{width:78px;height:78px;min-width:78px}#controls{right:calc(98px + env(safe-area-inset-right))}#active{right:calc(98px + env(safe-area-inset-right))}}
+</style></head><body><div id="top"><strong>WILDLIGHT · ASHENFELL</strong><div id="status">Loading animated Rowan…</div><div id="quest"></div></div><div id="topButtons"><button id="codex">CODEX</button><button id="saves">SAVES</button><button id="help">?</button></div><button id="retry">Retry</button><div id="minimap" aria-label="Ashenfell minimap"><div id="maptitle">ASHENFELL <span>N ↑</span></div><canvas id="mapcanvas" width="280" height="280"></canvas><div id="maplegend">● You · ◆ Tarin</div></div><div id="joy"><div id="nub"></div></div><button id="run">RUN</button><div id="controls"><button id="jump">JUMP</button><button id="act">ACT</button><button id="power">POWER</button><button id="attack">ATTACK</button></div><button id="active">✧ No power</button><div id="prompt">Move with the joystick · Swipe the world to look</div><div id="notice"></div><div id="modal"><div id="panel"><h2 id="mt"></h2><div id="mb"></div><div id="choices"></div></div></div><input type="file" id="importFile" accept=".json" hidden><script type="module">
+
+import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const status=document.querySelector('#status'),retry=document.querySelector('#retry');const scene=new THREE.Scene();scene.background=new THREE.Color('#81908a');scene.fog=new THREE.Fog('#81908a',26,115);const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,220);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.45));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;document.body.prepend(renderer.domElement);scene.add(new THREE.HemisphereLight(0xd8e7ec,0x394335,2.2));const sun=new THREE.DirectionalLight(0xffdfb0,2.6);sun.position.set(-24,35,19);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-42;sun.shadow.camera.right=42;sun.shadow.camera.top=42;sun.shadow.camera.bottom=-42;scene.add(sun);
+const mat=(c,r=1)=>new THREE.MeshStandardMaterial({color:c,roughness:r});const materials={grass:mat('#536c4d'),path:mat('#938475'),stone:mat('#858b87'),wall:mat('#b0a18c'),beam:mat('#514638'),roof:mat('#4f454e'),wood:mat('#67503d'),leaf:mat('#345c43'),bark:mat('#584537'),blue:mat('#6696a7'),fire:mat('#ff7331'),water:mat('#55b8ef')};const world=new THREE.Group();scene.add(world);function cube(x,y,z,w,h,d,m,parent=world){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}function ball(x,y,z,r,m,parent=world){let o=new THREE.Mesh(new THREE.SphereGeometry(r,9,7),m);o.position.set(x,y,z);parent.add(o);return o}function cyl(x,y,z,rt,rb,h,m,parent=world){let o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,9),m);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
+let ground=new THREE.Mesh(new THREE.PlaneGeometry(190,190),materials.grass);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;world.add(ground);for(let [x,z,w,d] of [[0,0,9,86],[0,0,85,8],[17,0,7,80],[-17,0,7,80],[0,22,80,7]]){let p=new THREE.Mesh(new THREE.PlaneGeometry(w,d),materials.path);p.rotation.x=-Math.PI/2;p.position.set(x,.022,z);world.add(p)}
+function house(x,z,w,d,h,i){const g=new THREE.Group();g.position.set(x,0,z);world.add(g);cube(0,h/2,0,w,h,d,materials.wall,g);for(let dx of [-w/2+.25,w/2-.25])for(let zz of [-d/2+.1,d/2-.1])cube(dx,h/2,zz,.24,h,.26,materials.beam,g);for(let yy of [.6,h-.35])for(let zz of [-d/2-.02,d/2+.02])cube(0,yy,zz,w,.17,.15,materials.beam,g);for(let side of [-1,1]){const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.8,.22,d*.72),materials.roof);roof.position.set(0,h+.78,side*d*.19);roof.rotation.x=side*.46;roof.castShadow=true;g.add(roof)}cube(0,1.05,d/2+.07,1.1,2.1,.15,materials.wood,g);for(let dx of [-w*.27,w*.27])cube(dx,2.15,d/2+.12,.85,1,.1,materials.blue,g);return g}
+const houseData=[[-29,-29,8,9,5],[-18,-29,9,9,5],[-29,-15,8,9,5],[-18,-13,10,8,5],[-29,1,8,8,5],[-18,9,10,9,5],[-29,26,9,10,5],[-18,26,10,10,5],[7,28,8,8,5],[20,29,9,10,5],[29,16,8,8,5],[30,-2,8,9,5],[30,-20,8,10,6],[18,-30,9,9,5],[6,-31,8,9,5],[-5,30,7,9,5]];houseData.forEach((h,i)=>house(...h,i));for(let x=-42;x<=42;x+=4){for(let z of [-42,42]){if(z===-42&&Math.abs(x)<8)continue;cube(x,1.6,z,3.9,3.2,1.5,materials.stone)}}for(let z=-42;z<=42;z+=4)for(let x of [-43,43])cube(x,1.6,z,1.5,3.2,3.9,materials.stone);for(let x of [-6,6])cube(x,3.2,-42,2.3,6.4,2.5,materials.stone);cube(0,6,-42,14,1.5,2.5,materials.stone);
+let seed=1937;function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}function tree(x,z,s=1){cyl(x,1.5*s,z,.16*s,.24*s,3*s,materials.bark);const g=new THREE.Mesh(new THREE.ConeGeometry(1.5*s,4*s,8),materials.leaf);g.position.set(x,4.2*s,z);g.castShadow=true;world.add(g)}for(let i=0;i<120;i++){let x=(rnd()-.5)*175,z=(rnd()-.5)*175;if(Math.abs(x)<47&&Math.abs(z)<47||Math.abs(x)<8&&z<0)continue;tree(x,z,.75+rnd()*.85)}for(let [x,z] of [[-6,8],[6,9],[-6,-8],[7,-9]]){cube(x,.5,z,3,1,2,materials.wood);cube(x,2.6,z,3.6,.3,2.4,materials.roof)}cyl(17,.6,12,2.1,2.1,1.2,materials.stone);ball(17,1.3,12,1.35,materials.water);cube(-18,.6,-3,3,1.2,2,materials.stone);ball(-18,1.5,-3,.55,materials.fire);
+const player=new THREE.Group();player.name="Rowan";scene.add(player);let mixer,actions={},currentAction,loaded=false;// Rowan is currently represented by a licensed Three.js example Soldier rig.
+// This is a real textured, skinned human mesh, but not yet a custom Rowan sculpt.
+const modelUrl='https://threejs.org/examples/models/gltf/Soldier.glb';function loadModel(){status.textContent='Loading Rowan’s animated model…';retry.style.display='none';new GLTFLoader().load(modelUrl,g=>{const m=g.scene;m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});const bounds=new THREE.Box3().setFromObject(m),sz=bounds.getSize(new THREE.Vector3());m.scale.setScalar(1.8/sz.y);const newBounds=new THREE.Box3().setFromObject(m);m.position.y=-newBounds.min.y;player.add(m);mixer=new THREE.AnimationMixer(m);for(const clip of g.animations)actions[clip.name.toLowerCase()]=mixer.clipAction(clip);loaded=true;status.textContent='Rowan loaded · '+g.animations.map(a=>a.name).join(', ');setAction('idle')},undefined,e=>{status.textContent='Model could not load. Check internet connection and tap Retry.';retry.style.display='block';console.error(e)})}retry.onclick=loadModel;loadModel();function setAction(key){
+ if(!loaded)return;
+ // RUN uses the Soldier's actual Run animation, not sped-up walking.
+ // A subtle Walk layer softens its exaggerated arm and upper-body motion.
+ if(key===activeMode)return;
+ activeMode=key;
+ const idle=actions.idle, walk=actions.walk, sprint=actions.run;
+ for(const action of [idle,walk,sprint]){
+  if(!action)continue;
+  action.enabled=true;
+  action.play();
+ }
+ // Crossfade effective weights so changing modes doesn't snap.
+ const weights=key==='run'?{idle:0,walk:.18,run:.82}:
+               key==='walk'?{idle:0,walk:1,run:0}:{idle:1,walk:0,run:0};
+ for(const [name,action] of Object.entries({idle,walk,run:sprint})){
+  if(!action)continue;
+  action.setEffectiveTimeScale(name==='run'?.92:1);
+  action.setEffectiveWeight(weights[name]);
+ }
+}
+let activeMode='';
+
+const POWER_DETAILS={
+  'Combination':'Join objects or simple powers. Greater mastery permits more complex ideas.',
+  'Fire':'Make and shape flames. Mastery increases control, range and intensity.',
+  'Water':'Guide water and its flow. Training increases pressure, mass and precision.',
+  'Steam':'A new power born from Fire and Water. Direct scalding vapor; train it on its own.',
+  'Dust':'A separately trained power that moves fine particles through the air.',
+  'Mud':'A separately trained power that controls flowing mud.',
+  'Smoke Cloud':'A separately trained power that creates concealing clouds.',
+  'Propulsion':'A separately trained power that boosts flying speed using steam.',
+  'Lightning Absorption':'A separately trained lightning strike that drains 20% health from targets it hits and transfers it to you.',
+
+  'Earth':'Shape soil and stone. Practice develops weight, scale and control.',
+  'Air':'Move air and pressure. Training extends distance and precision.',
+  'Flying':'Begin with a higher jump; greater mastery leads to flight and beyond.',
+  'Enhanced Strength':'Improve lifting and striking ability without a fixed limit.',
+  'Time Manipulation':'Train influence over the passage and perception of time.',
+  'Reality Distortion':'Alter how nearby reality behaves.',
+  'Mind Control':'Influence the actions of other minds.',
+  'Speed':'Move and react with increasing quickness. Unlimited growth.',
+  'Reality Warping':'Bend local reality in ways that should not be possible.',
+  'Creation':'Bring something new into existence. Mastery determines complexity.',
+  'Lightning Manipulation':'Generate and direct electrical energy, from sparks to storms.',
+  'Shadow Manipulation':'Shape and use shadows as your control grows.',
+  'Regeneration':'Recover from injury faster and eventually repair severe damage.',
+  'Gravity Manipulation':'Alter the weight and attraction of nearby objects.',
+  'Telekinesis':'Move objects with your mind without touching them.',
+  'Invisibility':'Conceal your body from sight.',
+  'Shapeshifting':'Alter your appearance and eventually your physical form.',
+  'Illusions':'Make others perceive sights and sounds that are not there.',
+  'Telepathy':'Share and receive thoughts without speaking.',
+  'Precognition':'Perceive possible events before they happen.',
+  'Dream Manipulation':'Enter, influence and shape dreams.',
+  'Memory Manipulation':'Change, obscure and eventually rewrite memories.',
+  'Plant Manipulation':'Influence plant growth and movement.',
+  'Animal Communication':'Understand and communicate with animals.',
+  'Sound Manipulation':'Alter sound and vibrations.',
+  'Magnetism':'Influence magnetic forces and objects.',
+  'Poison Manipulation':'Create and guide poisonous substances.',
+  'Necromancy':'Interact with the dead and their remains.',
+  'Probability Manipulation':'Influence the odds of events around you.',
+  'Power Suppression':'Interfere with the use of another power.',
+  'Space Manipulation':'Bend distance and relative positions.',
+  'Soul Manipulation':'Sense and influence spiritual essence.',
+  'Flame Torrent':'A sustained stream of flame guided by wind.',
+  'Magma':'Molten stone you can shape and hurl.',
+  'Mist':'A controllable blanket of fine water droplets.',
+  'Storm Current':'Electrified water that spreads through wet ground.',
+  'Thornwall':'Raise a living wall of thorns and roots.',
+  'Thunderstorm':'Call swirling charged winds and thunder.',
+  'Plasma':'Control blazing ionized energy.',
+  'Restoration':'Channel restorative water to mend injuries.',
+  'Momentum':'Build impact force as you accelerate.',
+  'Slipstream':'Create a wind corridor that boosts movement.',
+  'Skywalking':'Hold position and move precisely in open air.',
+  'Zero Gravity':'Reduce the pull of gravity around yourself.',
+  'Living Mire':'Shape a marsh that sprouts grasping roots.',
+  'Charged Vapor':'Create clouds of electrically charged vapor.',
+  'Healing Vapor':'Wrap allies in restorative steam.',
+  'Phantom Fog':'Conceal illusions inside a dense shifting cloud.',
+  'Ashstorm':'Whip burning ash into a sweeping storm.',
+  'Shadow Veil':'Disappear into connected patches of shadow.',
+  'Mindscape':'Project detailed imagined environments into another mind.',
+  'Stone Orbit':'Suspend and spin stones around yourself.',
+  'Sonic Boom':'Focus moving air into a concussive sound blast.',
+  'Electromagnetic Pulse':'Release a disruptive electromagnetic wave.',
+  'Venom Bloom':'Grow plants that release poisonous pollen.',
+  'Dream Command':'Plant suggestions in dreams that linger after waking.',
+  'Time Rush':'Accelerate your actions relative to the world.',
+  'Singularity':'Compress a small region of space into an intense gravitational point.',
+  'Fate Sight':'Perceive possible outcomes and favor one path.',
+  'Worldsmith':'Shape newly created matter by rewriting its local rules.',
+  'Life Conduit':'Turn drained vitality into a lingering regenerative charge.',
+  'Meteor Dash':'Surge forward with a fiery trail.',
+  'Gloom':'Spread a dimming fog that hides movement.',
+  'Obsidian':'Instantly cool molten rock into hard black glass.',
+  'Glass Swarm':'Guide a cloud of razor-edged obsidian shards.'
+};
+const FUSION_RECIPES=[
+ {a:'Fire',b:'Water',result:'Steam',min:1,detail:'Fire and Water form a new, independently trainable Steam power.'},
+ {a:'Air',b:'Earth',result:'Dust',min:1,detail:'Earth particles become a controllable cloud of Dust.'},
+ {a:'Earth',b:'Water',result:'Mud',min:1,detail:'Earth and Water form Mud, a separate power.'},
+ {a:'Dust',b:'Air',result:'Smoke Cloud',min:1,detail:'Dust and Air create a concealing Smoke Cloud.'},
+ {a:'Flying',b:'Steam',result:'Propulsion',min:1,detail:'Steam accelerates Flight, creating Propulsion: flight with speed.'},
+ {a:'Regeneration',b:'Lightning Manipulation',result:'Lightning Absorption',min:1,detail:'A lightning strike drains 20% of the health of everyone it hits and transfers the stolen health to you.'},
+ {a:'Flying',b:'Lightning Manipulation',result:'Teleportation',min:1000,detail:'Advanced mastery can turn Flight and Lightning into Teleportation.'},
+ {a:'Fire',b:'Air',result:'Flame Torrent',min:1,detail:'A sustained stream of flame guided by wind.'},
+ {a:'Fire',b:'Earth',result:'Magma',min:1,detail:'Molten stone you can shape and hurl.'},
+ {a:'Water',b:'Air',result:'Mist',min:1,detail:'A controllable blanket of fine water droplets.'},
+ {a:'Water',b:'Lightning Manipulation',result:'Storm Current',min:1,detail:'Electrified water that spreads through wet ground.'},
+ {a:'Earth',b:'Plant Manipulation',result:'Thornwall',min:1,detail:'Raise a living wall of thorns and roots.'},
+ {a:'Air',b:'Lightning Manipulation',result:'Thunderstorm',min:1,detail:'Call swirling charged winds and thunder.'},
+ {a:'Fire',b:'Lightning Manipulation',result:'Plasma',min:100,detail:'Control blazing ionized energy.'},
+ {a:'Water',b:'Regeneration',result:'Restoration',min:1,detail:'Channel restorative water to mend injuries.'},
+ {a:'Enhanced Strength',b:'Speed',result:'Momentum',min:1,detail:'Build impact force as you accelerate.'},
+ {a:'Speed',b:'Air',result:'Slipstream',min:1,detail:'Create a wind corridor that boosts movement.'},
+ {a:'Flying',b:'Air',result:'Skywalking',min:1,detail:'Hold position and move precisely in open air.'},
+ {a:'Flying',b:'Gravity Manipulation',result:'Zero Gravity',min:100,detail:'Reduce the pull of gravity around yourself.'},
+ {a:'Mud',b:'Plant Manipulation',result:'Living Mire',min:1,detail:'Shape a marsh that sprouts grasping roots.'},
+ {a:'Steam',b:'Lightning Manipulation',result:'Charged Vapor',min:1,detail:'Create clouds of electrically charged vapor.'},
+ {a:'Steam',b:'Regeneration',result:'Healing Vapor',min:1,detail:'Wrap allies in restorative steam.'},
+ {a:'Smoke Cloud',b:'Illusions',result:'Phantom Fog',min:1,detail:'Conceal illusions inside a dense shifting cloud.'},
+ {a:'Dust',b:'Fire',result:'Ashstorm',min:1,detail:'Whip burning ash into a sweeping storm.'},
+ {a:'Shadow Manipulation',b:'Invisibility',result:'Shadow Veil',min:1,detail:'Disappear into connected patches of shadow.'},
+ {a:'Telepathy',b:'Illusions',result:'Mindscape',min:100,detail:'Project detailed imagined environments into another mind.'},
+ {a:'Telekinesis',b:'Earth',result:'Stone Orbit',min:1,detail:'Suspend and spin stones around yourself.'},
+ {a:'Sound Manipulation',b:'Air',result:'Sonic Boom',min:1,detail:'Focus moving air into a concussive sound blast.'},
+ {a:'Magnetism',b:'Lightning Manipulation',result:'Electromagnetic Pulse',min:100,detail:'Release a disruptive electromagnetic wave.'},
+ {a:'Poison Manipulation',b:'Plant Manipulation',result:'Venom Bloom',min:1,detail:'Grow plants that release poisonous pollen.'},
+ {a:'Dream Manipulation',b:'Mind Control',result:'Dream Command',min:100,detail:'Plant suggestions in dreams that linger after waking.'},
+ {a:'Time Manipulation',b:'Speed',result:'Time Rush',min:100,detail:'Accelerate your actions relative to the world.'},
+ {a:'Space Manipulation',b:'Gravity Manipulation',result:'Singularity',min:1000,detail:'Compress a small region of space into an intense gravitational point.'},
+ {a:'Probability Manipulation',b:'Precognition',result:'Fate Sight',min:1000,detail:'Perceive possible outcomes and favor one path.'},
+ {a:'Reality Warping',b:'Creation',result:'Worldsmith',min:1000,detail:'Shape newly created matter by rewriting its local rules.'},
+ {a:'Lightning Absorption',b:'Regeneration',result:'Life Conduit',min:1,detail:'Turn drained vitality into a lingering regenerative charge.'},
+ {a:'Propulsion',b:'Fire',result:'Meteor Dash',min:1,detail:'Surge forward with a fiery trail.'},
+ {a:'Mist',b:'Shadow Manipulation',result:'Gloom',min:1,detail:'Spread a dimming fog that hides movement.'},
+ {a:'Magma',b:'Water',result:'Obsidian',min:1,detail:'Instantly cool molten rock into hard black glass.'},
+ {a:'Obsidian',b:'Telekinesis',result:'Glass Swarm',min:1,detail:'Guide a cloud of razor-edged obsidian shards.'}];
+const npc=[
+{name:'Tarin',x:2,z:1,power:'Combination',awake:true,skin:[214,159,116],cloth:[128,63,79]},
+{name:'Maela',x:-14,z:-1,power:'Fire',awake:true,skin:[199,144,105],cloth:[163,91,58]},
+{name:'Sera',x:16,z:10,power:'Water',awake:true,skin:[229,182,142],cloth:[75,131,169]},
+{name:'Orin',x:-8,z:-21,power:'Earth',awake:true,skin:[164,111,83],cloth:[103,102,69]},
+{name:'Pell',x:22,z:-10,power:null,awake:true,skin:[198,148,105],cloth:[108,98,139]},
+{name:'Nim',x:-23,z:18,power:'Air',awake:true,skin:[209,174,134],cloth:[112,126,165]},
+{name:'Edda',x:7,z:-29,power:null,awake:true,skin:[171,126,95],cloth:[122,93,70]},
+{name:'Bren',x:21,z:25,power:'Enhanced Strength',awake:true,skin:[197,139,104],cloth:[111,109,80]},
+{name:'Davi',x:-25,z:-23,power:'Fire',awake:true,skin:[225,177,126],cloth:[149,83,57]},
+{name:'Tova',x:-31,z:10,power:'Speed',awake:false,skin:[181,137,101],cloth:[102,119,169]},
+{name:'Fen',x:33,z:-12,power:'Flying',awake:false,skin:[206,157,118],cloth:[99,115,159]},
+{name:'Ilo',x:-36,z:-26,power:'Mind Control',awake:false,skin:[178,135,115],cloth:[109,83,147]},
+{name:'Vera',x:32,z:31,power:'Time Manipulation',awake:false,skin:[185,159,127],cloth:[75,115,129]},
+{name:'Cora',x:-33,z:26,power:'Plant Manipulation',awake:false,skin:[187,135,110],cloth:[84,137,98]},
+{name:'Fennel',x:36,z:18,power:'Animal Communication',awake:false,skin:[207,173,121],cloth:[114,113,84]},
+{name:'Garrick',x:27,z:-33,power:'Lightning Manipulation',awake:false,skin:[162,119,102],cloth:[111,104,146]},
+{name:'Lysa',x:-37,z:-7,power:'Regeneration',awake:false,skin:[218,163,125],cloth:[101,140,131]},
+{name:'Tal',x:8,z:35,power:'Sound Manipulation',awake:false,skin:[185,139,115],cloth:[133,113,158]}
+];
+
+const SAVE='wildlight_unmaking_ch1_v1',legacy=(()=>{try{return JSON.parse(localStorage.getItem(SAVE)||'null')}catch(e){return null}})();const prefs={name:'Rowan',pronouns:'they',skin:'#c59072',hair:'#47332c',outfit:'#4c7380',style:'short',...(legacy?.prefs||{})};const state={stage:0,powers:{},inventory:[],journal:[],attempts:[],selectedPower:null,extraThefts:{},deadVillagers:{},...(legacy?.state||{})};state.corruption=0;state.journal??=[];state.attempts??=[];state.extraThefts??={};if(state.steam&&!state.powers.Steam)state.powers.Steam=1;const start=legacy?.player||{x:0,z:-21};player.position.set(THREE.MathUtils.clamp(start.x,-80,80),0,THREE.MathUtils.clamp(start.z,-80,80));const pts=p=>Number(state.powers[p]||0),known=()=>Object.keys(state.powers).filter(p=>pts(p)>0);function persist(){try{localStorage.setItem(SAVE,JSON.stringify({format:'wildlight-save',version:2,prefs,state,player:{x:player.position.x,z:player.position.z}}))}catch(e){}}let lastSave=0;
+const nightSky=new THREE.Color('#101a32'),daySky=new THREE.Color('#81908a');
+const moon=new THREE.DirectionalLight(0xa6bbff,.9);moon.position.set(19,26,-15);scene.add(moon);
+const nightLamp=new THREE.PointLight(0xffb86a,12,24,2);nightLamp.position.set(1,4,0);scene.add(nightLamp);
+const nightLamp2=new THREE.PointLight(0xffbd78,10,22,2);nightLamp2.position.set(20,4,24);scene.add(nightLamp2);
+const skyStars=new THREE.Group();scene.add(skyStars);
+for(let i=0;i<75;i++){const angle=i*2.39996,up=.2+(i%13)/16;const star=new THREE.Mesh(new THREE.SphereGeometry(.08+(i%3)*.025,4,4),new THREE.MeshBasicMaterial({color:0xd8e4ff}));star.position.set(Math.cos(angle)*70,24+up*42,Math.sin(angle)*70);skyStars.add(star)}
+function applyTimeOfDay(){const isNight=state.stage>=2;document.querySelector('#maptitle').firstChild.textContent=isNight?'ASHENFELL · NIGHT ':'ASHENFELL · DAY ';scene.background.copy(isNight?nightSky:daySky);scene.fog.color.copy(isNight?nightSky:daySky);sun.intensity=isNight?.12:2.6;moon.intensity=isNight?.9:0;nightLamp.intensity=isNight?12:0;nightLamp2.intensity=isNight?10:0;skyStars.visible=isNight;renderer.toneMappingExposure=isNight?1.12:1.3;
+for(const f of figures){if(f.n.name==='Tarin'&&isNight&&!state.extraThefts.Tarin){f.n.x=20;f.n.z=24;f.g.position.set(20,0,24)}f.n.awake=!isNight; if(isNight&&!f.n.dead){f.g.rotation.z=-Math.PI/2;f.g.position.y=.35}else if(!f.n.dead){f.g.rotation.z=0;f.g.position.y=0}}}
+const figures=[];for(let n of npc){const g=new THREE.Group();g.position.set(n.x,0,n.z);scene.add(g);const coat=mat(new THREE.Color().setRGB(...n.cloth.map(v=>v/255))),skin=mat(new THREE.Color().setRGB(...n.skin.map(v=>v/255)));cyl(0,1.05,0,.29,.31,1.1,coat,g);ball(0,1.9,0,.3,skin,g);for(let x of [-.17,.17])cube(x,.32,0,.18,.65,.22,materials.wood,g);figures.push({n,g});if(state.extraThefts[n.name])n.power=null;if(state.deadVillagers[n.name]){n.power=state.deadVillagers[n.name].power;n.dead=true;g.rotation.z=Math.PI/2;g.position.y=.35}}
+applyTimeOfDay();const $=id=>document.getElementById(id);let open=false;function modal(title,body,buttons=[]){open=true;$('mt').textContent=title;$('mb').innerHTML=body;$('choices').replaceChildren();for(const [label,fn] of buttons){let b=document.createElement('button');b.textContent=label;b.onclick=fn;$('choices').appendChild(b)}$('modal').classList.add('open')}function close(){open=false;$('modal').classList.remove('open')}let toastTimer;function toast(s){$('notice').textContent=s;$('notice').style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('notice').style.display='none',2800)}function gain(p){if(pts(p))state.powers[p]*=2;else state.powers[p]=1;state.selectedPower=p;state.journal.unshift({title:'Stolen: '+p,detail:'Power Theft was deliberately performed. Previous owner forgets the power.'});persist();toast('POWER ACQUIRED · '+p+' · '+pts(p)+' mastery');quest()}const questData=[['A day like any other','Find Tarin in the market square.'],['The moment of resistance','Tarin resisted your first Power Theft.'],['After sundown','Find Tarin’s home in the northeast quarter.'],['The sleeping boy','Approach Tarin’s house.'],['The first gift','Find the stick and stone near the market (-4, -3).'],['Another impossible thing','Find Maela at the forge to the west.'],['Two powers','Discover and train your powers.'],['What the world knows','Seek Sera at the fountain; experiment with Combination.']];function quest(){let [title,desc]=questData[Math.min(state.stage,7)];$('quest').innerHTML='<b>'+title+'</b>'+desc+' · '+known().length+' powers';$('active').textContent='✧ '+(state.selectedPower||'No power')}quest();function distance(n){return Math.hypot(player.position.x-n.x,player.position.z-n.z)}function near(x,z,r=5){return Math.hypot(player.position.x-x,player.position.z-z)<r}
+function act(){if(open)return;const dead=npc.find(n=>n.dead&&distance(n)<4);if(dead){if(!dead.power)return toast('No power remains in this body.');return modal('Power Theft · '+dead.name,'<p>Pull the remaining '+dead.power+' power out of the body? Killing did not automatically grant it.</p>',[['Extract '+dead.power,()=>{let p=dead.power;dead.power=null;state.deadVillagers[dead.name].power=null;gain(p);close()}],['Leave',close]])}let tarin=npc[0],maela=npc[1],sera=npc[2];if(state.stage===0&&distance(tarin)<5){return modal('The square goes quiet','<p>Tarin combines a stick and stone into a weapon. You grab his wrist and try to steal his Combination power—but he resists and breaks free.</p>',[['Get away',()=>{state.stage=2;applyTimeOfDay();persist();close();quest();modal('Night falls over Ashenfell','<p>After Tarin attacks, the day fades into night. Tarin has gone home to sleep. The villagers are resting, and their powers can now be stolen deliberately.</p><p>Find Tarin’s home in the northeast quarter. Follow his marker on the minimap.</p>',[['Go into the night',close]])}]])}if(state.stage>=2&&!state.extraThefts.Tarin&&near(20,24,7)){return modal('Tarin sleeps','<p>He cannot resist while asleep. You can deliberately steal Combination.</p>',[['Steal Combination',()=>{gain('Combination');tarin.power=null;state.extraThefts.Tarin=true;state.stage=Math.max(state.stage,4);persist();close();quest()}],['Leave',close]])}if(state.stage===4&&near(-4,-3,6))return modal('A stick and a stone','<p>Combine these two objects with your stolen Combination power?</p>',[['Combine',()=>{state.powers.Combination+=1;state.inventory.push('Stone-tipped staff');state.stage=5;persist();close();quest();toast('Created stone-tipped staff')}],['Leave',close]]);if(state.stage>=2&&distance(maela)<5&&!pts('Fire'))return modal('Maela’s forge','<p>Maela rests by the forge. You can take Fire while she sleeps. She will forget she ever had it.</p>',[['Steal Fire',()=>{gain('Fire');maela.power=null;state.extraThefts.Maela=true;if(pts('Combination'))state.stage=Math.max(state.stage,6);persist();close();quest()}],['Leave',close]]);if(state.stage>=2&&distance(sera)<5&&!pts('Water'))return modal('The fountain keeper','<p>Sera is asleep. Water is available for deliberate Power Theft.</p>',[['Steal Water',()=>{gain('Water');sera.power=null;state.extraThefts.Sera=true;if(pts('Combination'))state.stage=Math.max(state.stage,7);persist();close();quest()}],['Leave',close]]);const n=npc.find(n=>!n.dead&&distance(n)<4.3);if(n){if(state.stage>=2&&n.power&&!state.extraThefts[n.name]&&['Orin','Nim','Bren','Tova','Fen','Ilo','Vera','Cora','Fennel','Garrick','Lysa','Tal'].includes(n.name))return modal(n.name+' · quiet hours','<p>Sleeping villagers cannot resist Power Theft.</p>',[['Steal '+n.power,()=>{let p=n.power;n.power=null;state.extraThefts[n.name]=true;gain(p);close()}],['Leave',close]]);return modal(n.name,'<p>'+(n.power?'You sense '+n.power+'. This villager is awake and may resist.':'No power remains.')+'</p>',[['Leave',close]])}toast('Move closer to a person or quest location to interact.')}
+function codex(tab='powers'){let body='',buttons=[];if(tab==='powers'){body=known().map(p=>'<div class="powerrow"><b>'+p+'</b> · '+pts(p)+' mastery<br><small>'+(POWER_DETAILS[p]||'No maximum mastery.')+'</small></div>').join('')||'<p>No powers acquired yet.</p>';body+='<p><small>Mastery has no cap. Combined powers are permanent; source powers remain yours.</small></p>';buttons=known().map(p=>['Equip '+p,()=>{state.selectedPower=p;persist();close();quest()}])}else if(tab==='fusion'){if(!pts('Combination'))body='<p>Steal Combination from Tarin first.</p>';else if(known().filter(p=>p!=='Combination').length<2)body='<p>You need two other powers to combine.</p>';else{let opt=known().filter(p=>p!=='Combination').map(p=>'<option>'+p+'</option>').join('');body='<p>Experiment with two powers. Ingredients are never consumed.</p><select id="a">'+opt+'</select><select id="b">'+opt+'</select>';buttons=[['Attempt Combination',()=>{let a=$('a').value,b=$('b').value,r=FUSION_RECIPES.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));if(a===b)return toast('Choose different powers');if(!r)return toast('No stable combination formed');if(pts('Combination')<r.min)return toast('Combination mastery too low');if(!pts(r.result)){state.powers[r.result]=1;state.selectedPower=r.result;state.journal.unshift({title:'Discovered: '+r.result,detail:r.detail});persist();toast('New permanent power: '+r.result)}else toast('Already discovered: '+r.result);close();quest()}]]}}else body=state.journal.map(e=>'<div class="powerrow"><b>'+e.title+'</b><br><small>'+e.detail+'</small></div>').join('')||'<p>No discoveries yet.</p>';buttons.push(['Powers',()=>codex('powers')],['Combine',()=>codex('fusion')],['Journal',()=>codex('journal')],['Return',close]);modal('Power Codex · '+tab,body,buttons)}$('codex').onclick=()=>codex();$('active').onclick=()=>codex();$('act').onclick=act;
+$('saves').onclick=()=>modal('Saves','<p>Export before changing website addresses. This integration reads the original Wildlight save key and keeps your powers and story progress.</p>',[['Export JSON',()=>{persist();const blob=new Blob([localStorage.getItem(SAVE)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Wildlight-Save.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);close()}],['Import JSON',()=>{$('importFile').click();close()}],['Back',close]]);$('importFile').onchange=async e=>{try{const o=JSON.parse(await e.target.files[0].text());if(!o.state||!o.player||!o.prefs)throw Error('Invalid save');if(confirm('Replace this Wildlight save?')){localStorage.setItem(SAVE,JSON.stringify(o));location.reload()}}catch(e){alert(e.message)}};$('help').onclick=()=>modal('Integration Alpha','<p>V5 animated Rowan and camera + Three.js Ashenfell town + original Chapter One power/story data.</p><p>Joystick moves, RUN sprints, swipe right to look, ACT interacts, POWER casts. Codex holds the original power library and Combination recipes. ATTACK damages nearby training enemies.</p><p>This is an early integrated build, not yet the full original wilderness, wildlife, AI, or every spell behavior. Rowan uses the temporary Soldier model and requires internet for the model and Three.js.</p>',[['Close',close]]);
+let joyX=0,joyY=0,run=false,yaw=0,dragId=null,lastX=0,lastY=0,heading=0,vertical=0,vy=0,grounded=true;
+const joy=$('joy'),nub=$('nub');
+function updateJoy(e){const r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),len=Math.hypot(dx,dy),f=Math.min(1,52/(len||1));joyX=dx*f/52;joyY=dy*f/52;nub.style.transform=`translate(${dx*f}px,${dy*f}px)`}
+joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);updateJoy(e)});
+joy.addEventListener('pointermove',e=>{if(joy.hasPointerCapture(e.pointerId))updateJoy(e)});
+function resetJoy(){joyX=joyY=0;nub.style.transform='translate(0,0)'}
+joy.addEventListener('pointerup',resetJoy);joy.addEventListener('pointercancel',resetJoy);
+const runBtn=$('run');
+runBtn.addEventListener('pointerdown',e=>{e.preventDefault();run=true;runBtn.setPointerCapture(e.pointerId)});
+runBtn.addEventListener('pointerup',()=>run=false);runBtn.addEventListener('pointercancel',()=>run=false);
+runBtn.addEventListener('lostpointercapture',()=>run=false);
+$('jump').onclick=()=>{if(grounded){vy=6.5;grounded=false}};
+let cameraYaw=0,cameraPitch=.28;
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.clientX>innerWidth*.38){dragId=e.pointerId;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)}});
+renderer.domElement.addEventListener('pointermove',e=>{if(e.pointerId!==dragId)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;cameraYaw-=dx*.006;cameraPitch=THREE.MathUtils.clamp(cameraPitch+dy*.004,-.15,1.0)});
+function endDrag(e){if(e.pointerId===dragId)dragId=null}
+renderer.domElement.addEventListener('pointerup',endDrag);renderer.domElement.addEventListener('pointercancel',endDrag);
+const enemyMat=mat('#76575b');const enemies=[];for(let [x,z] of [[-7,-35],[0,-38],[8,-35]]){let g=new THREE.Group();g.position.set(x,0,z);scene.add(g);cyl(0,.8,0,.3,.37,1.6,enemyMat,g);ball(0,1.8,0,.27,materials.stone,g);enemies.push({g,hp:100,max:100,dead:false,difficulty:1})}const particles=[];function burst(x,y,z,color){for(let i=0;i<13;i++){let m=new THREE.Mesh(new THREE.SphereGeometry(.08,5,4),new THREE.MeshBasicMaterial({color}));m.position.set(x,y,z);scene.add(m);particles.push({m,v:new THREE.Vector3((Math.random()-.5)*5,Math.random()*3,(Math.random()-.5)*5),life:.65})}}function train(p,kind,difficulty=1){let n=pts(p);if(!n)return;if(kind==='cast'&&n>=20||kind==='hit'&&n>=50)return;let add=kind==='kill'?Math.max(2,Math.round(4*difficulty)):kind==='hit'?2:1;state.powers[p]+=add;persist()};function damageEnemy(e,dmg,p){if(e.dead)return;e.hp=Math.max(0,e.hp-dmg);burst(e.g.position.x,1.4,e.g.position.z,p==='Fire'?0xff7733:0x8fc6e4);train(p,'hit');if(e.hp<=0){e.dead=true;e.g.rotation.z=Math.PI/2;e.g.position.y=.3;train(p,'kill',e.difficulty);toast('Enemy defeated · '+p+' mastery increased')}}let castCooldown=0;function cast(){if(open)return;let p=state.selectedPower;if(!p)return toast('Steal a power first');if(performance.now()<castCooldown)return;castCooldown=performance.now()+480;let color=p==='Fire'?0xff7331:p==='Water'?0x55b8ef:p==='Steam'?0xe4e8f0:0xb991ee;let dir=new THREE.Vector3(-Math.sin(heading),0,-Math.cos(heading));let start=player.position.clone().add(new THREE.Vector3(0,1.3,0)).addScaledVector(dir,.7);burst(start.x,start.y,start.z,color);let target=enemies.filter(e=>!e.dead&&e.g.position.distanceTo(player.position)<16).sort((a,b)=>a.g.position.distanceTo(player.position)-b.g.position.distanceTo(player.position))[0];if(target&&p!=='Combination'){damageEnemy(target,Math.max(8,12+Math.sqrt(pts(p))*2),p)}else train(p,'cast');if(p==='Regeneration')toast('Regeneration · healing practice');else if(p==='Combination')toast('Combination requires objects or another power');else if(target)toast(p+' hit training enemy · '+Math.round(target.hp)+' HP remaining');quest()}$('power').onclick=cast;$('attack').onclick=()=>{let e=enemies.filter(e=>!e.dead&&e.g.position.distanceTo(player.position)<3).sort((a,b)=>a.g.position.distanceTo(player.position)-b.g.position.distanceTo(player.position))[0];if(e){damageEnemy(e,15,'Enhanced Strength');toast('Melee hit')}else toast('No enemy in melee range')};addEventListener('keydown',e=>{if(e.key==='e')act();if(e.key==='q')cast();if(e.key==='p')codex();if(e.key===' ') {e.preventDefault();$('jump').click()}});
+
+// Ashenfell world-space minimap. North is the top of the map (-Z).
+const mapCanvas=document.getElementById('mapcanvas'),mapCtx=mapCanvas.getContext('2d');
+let mapTimer=0;
+function drawMinimap(){
+ const c=mapCtx,w=mapCanvas.width,h=mapCanvas.height,range=100;
+ const mx=x=>(x+range)/(range*2)*w,mz=z=>(z+range)/(range*2)*h;
+ c.clearRect(0,0,w,h);c.fillStyle='#314c3b';c.fillRect(0,0,w,h);
+ c.fillStyle='#71806c';c.fillRect(mx(-44),mz(-44),mx(44)-mx(-44),mz(44)-mz(-44));
+ c.strokeStyle='#c0a78a';c.lineWidth=8;
+ for(const [ax,az,bx,bz] of [[0,-43,0,43],[-43,0,43,0],[-43,22,43,22],[-17,-40,-17,40],[17,-40,17,40]]){c.beginPath();c.moveTo(mx(ax),mz(az));c.lineTo(mx(bx),mz(bz));c.stroke()}
+ c.fillStyle='#594b43';for(const [x,z,ww,dd] of houseData){c.fillRect(mx(x-ww/2),mz(z-dd/2),ww/(range*2)*w,dd/(range*2)*h)}
+ c.strokeStyle='#d9d0b8';c.lineWidth=3;c.strokeRect(mx(-43),mz(-42),mx(43)-mx(-43),mz(42)-mz(-42));
+ c.fillStyle='#8fd0de';c.beginPath();c.arc(mx(0),mz(0),5,0,Math.PI*2);c.fill();
+ for(const n of npc){if(n.dead)continue;c.fillStyle=n.name==='Tarin'?'#ffd270':'#e5e2cc';c.beginPath();c.arc(mx(n.x),mz(n.z),n.name==='Tarin'?5:3,0,Math.PI*2);c.fill()}
+ const x=mx(player.position.x),y=mz(player.position.z);c.save();c.translate(x,y);c.rotate(heading);c.fillStyle='#ff684f';c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.moveTo(0,-11);c.lineTo(8,9);c.lineTo(0,5);c.lineTo(-8,9);c.closePath();c.fill();c.stroke();c.restore();
+}
+const clock=new THREE.Clock(),target=new THREE.Vector3();let saveTime=0;function tick(){requestAnimationFrame(tick);const dt=Math.min(clock.getDelta(),.05);mapTimer+=dt;if(mapTimer>.12){drawMinimap();mapTimer=0}if(!open){const x=Math.abs(joyX)>.08?joyX:0,y=Math.abs(joyY)>.08?-joyY:0,magnitude=Math.min(1,Math.hypot(x,y));if(magnitude>.05){// Joystick forward always follows the direction the camera LOOKS, never the direction behind it. Camera swipe alone never moves Rowan.
+let vx=Math.cos(cameraYaw)*x-Math.sin(cameraYaw)*y,vz=-Math.sin(cameraYaw)*x-Math.cos(cameraYaw)*y;let speed=(run?5:2.2)*magnitude;let nx=THREE.MathUtils.clamp(player.position.x+vx*speed*dt,-88,88),nz=THREE.MathUtils.clamp(player.position.z+vz*speed*dt,-88,88);player.position.x=nx;player.position.z=nz;let desired=Math.atan2(-vx,-vz);heading+=Math.atan2(Math.sin(desired-heading),Math.cos(desired-heading))*Math.min(1,dt*13);setAction(run?'run':'walk')}else setAction('idle');vy-=16*dt;vertical=Math.max(0,vertical+vy*dt);if(vertical===0){vy=0;grounded=true}player.position.y=vertical;player.rotation.y=heading;mixer?.update(dt);saveTime+=dt;if(saveTime>9){persist();saveTime=0}let n=npc.filter(n=>!n.dead&&distance(n)<5).sort((a,b)=>distance(a)-distance(b))[0];$('prompt').textContent=n?'ACT · '+n.name:state.stage>=2&&!state.extraThefts.Tarin&&near(20,24,8)?'ACT · Tarin’s home':state.stage===4&&near(-4,-3,7)?'ACT · Stick and stone':'Joystick = move · Swipe = look only · ACT near people'}for(let i=particles.length-1;i>=0;i--){let a=particles[i];a.life-=dt;a.m.position.addScaledVector(a.v,dt);a.v.y-=4*dt;a.m.scale.setScalar(Math.max(.01,a.life));if(a.life<=0){scene.remove(a.m);a.m.geometry.dispose();a.m.material.dispose();particles.splice(i,1)}}let dist=5.6;target.set(player.position.x+Math.sin(cameraYaw)*dist*Math.cos(cameraPitch),player.position.y+2+Math.sin(cameraPitch)*dist,player.position.z+Math.cos(cameraYaw)*dist*Math.cos(cameraPitch));camera.position.lerp(target,Math.min(1,dt*9));camera.lookAt(player.position.x,player.position.y+1.35,player.position.z);renderer.render(scene,camera)}tick();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script></body></html>
